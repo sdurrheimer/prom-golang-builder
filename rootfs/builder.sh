@@ -2,7 +2,7 @@
 
 set -e
 
-[ ! -e "/var/run/docker.sock" ] && echo "Error: Docker socket must be mount into /var/run/docker.sock" && exit 1
+[ ! -e "/run/docker.sock" ] && echo "Error: Docker socket must be mount into /run/docker.sock" && exit 1
 [ ! -e "./Dockerfile" ] && echo "Error: A Dockerfile must be present into the root of your source files" && exit 1
 
 usage() {
@@ -19,7 +19,7 @@ if [ $# -eq 0 ]; then
   usage
 fi
 
-while [[ $# > 1 ]]; do
+while [[ $# > 0 ]]; do
   opt="$1"
   case $opt in
     -p|--path)
@@ -66,7 +66,7 @@ docker build -t "${tagName}" .
 
 if [ $latest -eq 1 ]; then
   echo ">> tagging final docker image as latest"
-  docker tag "${tagName}" "${tagName%%:*}:latest"
+  docker tag -f "${tagName}" "${tagName%%:*}:latest"
 fi
 
 rm -rf ./ca-certificates.crt emptydir/
