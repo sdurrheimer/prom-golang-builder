@@ -44,19 +44,25 @@ done
 
 [ -z "${repoName}" ] && echo "Error: {-p,--path} option is mandatory" && exit 1
 
+# Get first path listed in GOPATH
 goPath="${GOPATH%%:*}"
 repoPath="$goPath/src/$repoName"
 
+# Simulate the go src path with a symlink
 mkdir -p "$(dirname "$repoPath")"
 ln -sf /app "$repoPath"
 
+# Makefile target required to build the project golang
 make build
 
+# Get the last part of the repository name
 defaultName=${repoName##*/}
+# Branch name as default tag
 defaultTag=$( git rev-parse --abbrev-ref HEAD 2> /dev/null || echo 'unknown' )
 tagName=${tagName:-${defaultName}:${defaultTag}}
 latest=${latest:-0}
 
+# Some additionnal files necessary to fix `From scratch` issues
 cp -a /etc/ssl/certs/ca-certificates.crt ./
 tar cfz zoneinfo.tar.gz -C / usr/share/zoneinfo
 mkdir ./emptydir
@@ -70,6 +76,7 @@ if [ $latest -eq 1 ]; then
   docker tag -f "${tagName}" "${tagName%%:*}:latest"
 fi
 
+# Cleaning fixing files
 rm -rf ./ca-certificates.crt zoneinfo.tar.gz emptydir/
 
 exit 0
