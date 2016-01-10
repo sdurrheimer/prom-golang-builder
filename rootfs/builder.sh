@@ -58,6 +58,7 @@ tagName=${tagName:-${defaultName}:${defaultTag}}
 latest=${latest:-0}
 
 cp -a /etc/ssl/certs/ca-certificates.crt ./
+tar cfz zoneinfo.tar.gz -C / usr/share/zoneinfo
 mkdir ./emptydir
 
 echo ">> building final docker image"
@@ -69,6 +70,6 @@ if [ $latest -eq 1 ]; then
   docker tag -f "${tagName}" "${tagName%%:*}:latest"
 fi
 
-rm -rf ./ca-certificates.crt emptydir/
+rm -rf ./ca-certificates.crt zoneinfo.tar.gz emptydir/
 
 exit 0
