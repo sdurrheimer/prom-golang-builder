@@ -2,16 +2,15 @@
 
 set -e
 
-[ ! -e "/run/docker.sock" ] && echo "Error: Docker socket must be mount into /run/docker.sock" && exit 1
-[ ! -e "./Dockerfile" ] && echo "Error: A Dockerfile must be present into the root of your source files" && exit 1
-
 usage() {
   base="$(basename "$0")"
   cat <<EOUSAGE
 Usage: $base [args]
-  -p,--path arg : import path
-  -t,--tag arg  : docker tag for the final image
-  -l,--latest   : tag final image as latest 
+  -d,--docker           : Build the final image
+  -i,--import-path arg  : Go import path of the project
+  -l,--latest           : Tag the final image as latest
+  -p,--platforms arg    : List of platforms (GOOS/GOARCH) to build separated by a space
+  -t,--tag arg          : Docker tag for the final image
 EOUSAGE
 }
 
@@ -19,20 +18,28 @@ if [ $# -eq 0 ]; then
   usage
 fi
 
-while [[ $# > 0 ]]; do
+while [[ $# -gt 0 ]]; do
   opt="$1"
-  case $opt in
-    -p|--path)
-      repoName="$2"
-      shift 2
+  case "$opt" in
+    -d|--docker)
+      docker=1
+      shift
     ;;
-    -t|--tag)
-      tagName="$2"
+    -i|--import-path)
+      repoName="$2"
       shift 2
     ;;
     -l|--latest)
       latest=1
       shift
+    ;;
+    -p|--plateforms)
+      IFS=' ' read -r -a goarchs <<< "$2"
+      shift 2
+    ;;
+    -t|--tag)
+      tagName="$2"
+      shift 2
     ;;
     *)
       echo "Error: Unkown option: ${opt}"
@@ -42,7 +49,7 @@ while [[ $# > 0 ]]; do
   esac
 done
 
-[ -z "${repoName}" ] && echo "Error: {-p,--path} option is mandatory" && exit 1
+[ -z "${repoName}" ] && echo "Error: {-i,--import-path} option is mandatory" && exit 1
 
 # Get first path listed in GOPATH
 goPath="${GOPATH%%:*}"
@@ -52,31 +59,66 @@ repoPath="$goPath/src/$repoName"
 mkdir -p "$(dirname "$repoPath")"
 ln -sf /app "$repoPath"
 
-# Makefile target required to build the project golang
-make build
+goarchs=(${goarchs[@]:-linux\/amd64})
+for goarch in "${goarchs[@]}"
+do
+    goos=${goarch%%/*}
+    arch=${goarch##*/}
 
-# Get the last part of the repository name
-defaultName=${repoName##*/}
-# Branch name as default tag
-defaultTag=$( git rev-parse --abbrev-ref HEAD 2> /dev/null || echo 'unknown' )
-tagName=${tagName:-${defaultName}:${defaultTag}}
-latest=${latest:-0}
+    # Makefile target required to build the project golang
+    if [ $goos = "windows" ]; then
+      if [ $arch = "386" ]; then
+        CC="/usr/bin/i686-w64-mingw32-gcc" CXX="i686-w64-mingw32-g++" CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
+      else
+        CC="/usr/bin/x86_64-w64-mingw32-gcc" CXX="x86_64-w64-mingw32-g++" CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
+      fi
+    elif [ $goos = "darwin" ]; then
+      if [ $arch = "386" ]; then
+        CC="o32-clang" CXX="o32-clang++" CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
+      else
+        CC="o64-clang" CXX="o64-clang++" CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
+      fi
+    else
+      if [[ $arch =~ (arm|arm64) ]]; then
+          goarms=(5 6 7)
+          for goarm in "${goarms[@]}"
+          do
+            GOARM=${goarm} CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
+          done
+      else
+        CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
+      fi
+    fi
+done
 
-# Some additionnal files necessary to fix `From scratch` issues
-cp -a /etc/ssl/certs/ca-certificates.crt ./
-tar cfz zoneinfo.tar.gz -C / usr/share/zoneinfo
-mkdir ./emptydir
+docker=${docker:-0}
+if [ $docker -eq 1 ]; then
+    [ ! -e "/run/docker.sock" ] && echo "Error: Docker socket must be mount into /run/docker.sock" && exit 1
+    [ ! -e "./Dockerfile" ] && echo "Error: A Dockerfile must be present into the root of your source files" && exit 1
 
-echo ">> building final docker image"
-echo " >   ${tagName}"
-docker build -t "${tagName}" .
+    # Get the last part of the repository name
+    defaultName=${repoName##*/}
+    # Branch name as default tag
+    defaultTag=$( git rev-parse --abbrev-ref HEAD 2> /dev/null || echo 'unknown' )
+    tagName=${tagName:-${defaultName}:${defaultTag}}
+    latest=${latest:-0}
 
-if [ $latest -eq 1 ]; then
-  echo ">> tagging final docker image as latest"
-  docker tag -f "${tagName}" "${tagName%%:*}:latest"
+    # Some additionnal files necessary to fix `From scratch` issues
+    cp -a /etc/ssl/certs/ca-certificates.crt ./
+    tar cfz zoneinfo.tar.gz -C / usr/share/zoneinfo
+    mkdir ./emptydir
+
+    echo ">> building final docker image"
+    echo " >   ${tagName}"
+    docker build -t "${tagName}" .
+
+    if [ $latest -eq 1 ]; then
+      echo ">> tagging final docker image as latest"
+      docker tag -f "${tagName}" "${tagName%%:*}:latest"
+    fi
+
+    # Cleaning fixing files
+    rm -rf ./ca-certificates.crt zoneinfo.tar.gz emptydir/
 fi
-
-# Cleaning fixing files
-rm -rf ./ca-certificates.crt zoneinfo.tar.gz emptydir/
 
 exit 0
