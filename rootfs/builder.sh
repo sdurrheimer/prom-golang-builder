@@ -2,6 +2,8 @@
 
 set -e
 
+[ ! -e "./Makefile" ] && echo "Error: A Makefile with a 'build' target must be present into the root of your source files" && exit 1
+
 usage() {
   base="$(basename "$0")"
   cat <<EOUSAGE
