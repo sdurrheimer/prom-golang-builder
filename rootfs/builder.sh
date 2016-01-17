@@ -1,7 +1,21 @@
 #!/usr/bin/env bash
 
+# Copyright 2015 The Prometheus Authors
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 set -e
 
+# This is a Makefile based building processus
 [ ! -e "./Makefile" ] && echo "Error: A Makefile with a 'build' target must be present into the root of your source files" && exit 1
 
 usage() {
@@ -13,6 +27,7 @@ Usage: $base [args]
   -l,--latest           : Tag the final image as latest
   -p,--platforms arg    : List of platforms (GOOS/GOARCH) to build separated by a space
   -t,--tag arg          : Docker tag for the final image
+  -T,--tests            : Go run tests
 EOUSAGE
 }
 
@@ -20,6 +35,7 @@ if [ $# -eq 0 ]; then
   usage
 fi
 
+# Flag parsing
 while [[ $# -gt 0 ]]; do
   opt="$1"
   case "$opt" in
@@ -43,6 +59,10 @@ while [[ $# -gt 0 ]]; do
       tagName="$2"
       shift 2
     ;;
+    -T|--tests)
+      tests=1
+      shift
+    ;;
     *)
       echo "Error: Unkown option: ${opt}"
       usage
@@ -61,13 +81,24 @@ repoPath="$goPath/src/$repoName"
 mkdir -p "$(dirname "$repoPath")"
 ln -sf /app "$repoPath"
 
+# Running tests
+# The `test` Makefile target is required
+tests=${tests:-0}
+if [ $tests -eq 1 ]; then
+    # Need to be in the proper GOPATH to run tests
+    cd $repoPath ; make test
+    exit 0
+fi
+
+
+# Building binaries for the specified platforms
+# The `build` Makefile target is required
 goarchs=(${goarchs[@]:-linux\/amd64})
 for goarch in "${goarchs[@]}"
 do
     goos=${goarch%%/*}
     arch=${goarch##*/}
 
-    # Makefile target required to build the project golang
     if [ $goos = "windows" ]; then
       if [ $arch = "386" ]; then
         CC="/usr/bin/i686-w64-mingw32-gcc" CXX="i686-w64-mingw32-g++" CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
@@ -93,6 +124,7 @@ do
     fi
 done
 
+# Building the final docker image
 docker=${docker:-0}
 if [ $docker -eq 1 ]; then
     [ ! -e "/run/docker.sock" ] && echo "Error: Docker socket must be mount into /run/docker.sock" && exit 1
