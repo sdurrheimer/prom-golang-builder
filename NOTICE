@@ -1,0 +1,15 @@
+Prometheus Golang builder Docker Image
+Copyright 2013-2015 The Prometheus Authors
+
+
+The following components are included in this product:
+
+Docker
+https://github.com/docker/docker
+Copyright 2013-2016 Docker, Inc.
+Licensed under the Apache License, Version 2.0
+
+OSXCross
+https://github.com/tpoechtrager/osxcross
+Copyright 2014-2015 by Thomas Poechtrager
+Licensed under the GNU License, Version 2
