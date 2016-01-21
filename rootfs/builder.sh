@@ -112,14 +112,28 @@ do
         CC="o64-clang" CXX="o64-clang++" CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
       fi
     else
-      if [[ $arch =~ (arm|arm64) ]]; then
+      if [ $arch = "arm64" ]; then
           goarms=(5 6 7)
           for goarm in "${goarms[@]}"
           do
-            GOARM=${goarm} CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
+              GOARM=${goarm} CC="aarch64-linux-gnu-gcc" CXX="aarch64-linux-gnu-g++" CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
           done
+      elif [ $arch = "arm" ]; then
+          goarms=(5 6 7)
+          for goarm in "${goarms[@]}"
+          do
+              if [ $goarm = 7 ]; then
+                  GOARM=${goarm} CC="arm-linux-gnueabihf-gcc" CXX="arm-linux-gnueabihf-g++" CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
+              else
+                  GOARM=${goarm} CC="arm-linux-gnueabi-gcc" CXX="arm-linux-gnueabi-g++" CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
+              fi
+          done
+      elif [ $arch = "ppc64le" ]; then
+          CC="powerpc64le-linux-gnu-gcc" CXX="powerpc64le-linux-gnu-g++" CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
+      elif [ $arch = "ppc64" ]; then
+          CC="powerpc-linux-gnu-gcc" CXX="powerpc-linux-gnu-g++" CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
       else
-        CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
+          CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
       fi
     fi
 done

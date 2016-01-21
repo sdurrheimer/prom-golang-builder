@@ -1,4 +1,4 @@
-FROM        golang:1.5.3
+FROM        golang:1.5.3-sid
 MAINTAINER  The Prometheus Authors <prometheus-developers@googlegroups.com>
 
 VOLUME  /app
@@ -10,12 +10,21 @@ RUN set -x \
     && dpkg --add-architecture armel \
     && dpkg --add-architecture armhf \
     && dpkg --add-architecture i386 \
+#    && dpkg --add-architecture mipsel \
     && dpkg --add-architecture powerpc \
     && dpkg --add-architecture ppc64el \
-    && apt-get update && apt-get install -y --force-yes --no-install-recommends \
-        libc6-dev-i386 zlib1g-dev libmpc-dev libmpfr-dev libgmp-dev mingw-w64 \
+    && apt-get update && apt-get install -y --no-install-recommends \
+        libc6-dev-i386 linux-libc-dev \
+#        zlib1g-dev libmpc-dev libmpfr-dev libgmp-dev \
+        mingw-w64 \
         clang llvm-dev libxml2-dev uuid-dev libssl-dev patch xz-utils bzip2 cpio \
-        binutils-multiarch binutils-multiarch-dev gcc-multilib \
+#        binutils-multiarch binutils-multiarch-dev gcc-multilib \
+        crossbuild-essential-arm64 \
+        crossbuild-essential-armel \
+        crossbuild-essential-armhf \
+#        crossbuild-essential-mipsel \
+        crossbuild-essential-powerpc \
+        crossbuild-essential-ppc64el \
     && wget -nv https://get.docker.com/builds/Linux/x86_64/docker-1.9.1 -O /usr/bin/docker \
     && chmod +x /usr/bin/docker \
     && rm -rf /var/lib/apt/lists/*
