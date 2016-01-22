@@ -42,7 +42,7 @@ RUN set -x \
         "https://www.dropbox.com/s/bwlbtwywvlu1au7/MacOSX${SDK_VERSION}.sdk.tar.xz" \
     && UNATTENDED=yes ./build.sh \
     && mv target "${OSXCROSS_PATH}" \
-    && rm -rf /tmp/osxcross "/usr/osxcross/SDK/MacOSX${SDK_VERSION}.sdk/usr/share/man"
+    && rm -rf /tmp/osxcross "/usr/osxcross/SDK"
 
 ENV PATH $OSXCROSS_PATH/bin:$PATH
 
