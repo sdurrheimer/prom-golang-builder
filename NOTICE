@@ -2,7 +2,7 @@ Prometheus Golang builder Docker Image
 Copyright 2013-2015 The Prometheus Authors
 
 
-The following components are included in this product:
+The following components are used in this product:
 
 Docker
 https://github.com/docker/docker

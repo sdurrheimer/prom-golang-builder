@@ -11,14 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-REPOSITORY := sdurrheimer
-NAME       := prom-golang-builder
-BRANCH     := $(shell git rev-parse --abbrev-ref HEAD)
+NAME := prom-golang-builder
 
 build:
-	docker build -t "$(REPOSITORY)/$(NAME):$(BRANCH)" .
+	docker build -t "sdurrheimer/$(NAME):$(shell git rev-parse --abbrev-ref HEAD)" .
+	docker tag -f "sdurrheimer/$(NAME):$(shell git rev-parse --abbrev-ref HEAD)" "sdurrheimer/$(NAME):latest"
 
-tag:
-	docker tag -f "$(REPOSITORY)/$(NAME):$(BRANCH)" "$(REPOSITORY)/$(NAME):latest"
-
-.PHONY: build tag
+.PHONY: build
