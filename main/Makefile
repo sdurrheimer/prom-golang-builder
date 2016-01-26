@@ -18,6 +18,7 @@ SUFFIX     ?= -$(BRANCH)
 DIRNAME    := $(shell basename $(CURDIR))
 
 build:
-	docker build -t "$(REPOSITORY)/$(NAME):$(DIRNAME)$(SUFFIX)" --build-arg OSXCROSS_SDK_URL=${OSXCROSS_SDK_URL} .
+	@echo ">> building $(REPOSITORY)/$(NAME):$(DIRNAME)$(SUFFIX)"
+	@docker build -t "$(REPOSITORY)/$(NAME):$(DIRNAME)$(SUFFIX)" --build-arg OSXCROSS_SDK_URL=${OSXCROSS_SDK_URL} .
 
 .PHONY: build

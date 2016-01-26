@@ -18,6 +18,7 @@ SUFFIX     ?= -$(BRANCH)
 DIRNAME    := $(shell basename $(CURDIR))
 
 build:
-	docker build -t "$(REPOSITORY)/$(NAME):$(DIRNAME)$(SUFFIX)" .
+	@echo ">> building $(REPOSITORY)/$(NAME):$(DIRNAME)$(SUFFIX)"
+	@docker build -t "$(REPOSITORY)/$(NAME):$(DIRNAME)$(SUFFIX)" .
 
 .PHONY: build
