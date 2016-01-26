@@ -15,17 +15,9 @@ REPOSITORY := sdurrheimer
 NAME       := prom-golang-builder
 BRANCH     := $(shell git rev-parse --abbrev-ref HEAD)
 SUFFIX     ?= -$(BRANCH)
+DIRNAME    := $(shell basename $(CURDIR))
 
-all:
-	cd main; make
-	cd arm; make
-	cd powerpc; make
-	cd mips; make
+build:
+	docker build -t "$(REPOSITORY)/$(NAME):$(DIRNAME)$(SUFFIX)" .
 
-tag:
-	docker tag -f "$(REPOSITORY)/$(NAME):main$(SUFFIX)" "$(REPOSITORY)/$(NAME):latest"
-
-push:
-	docker push "$(REPOSITORY)/$(NAME)"
-
-.PHONY: all tag
+.PHONY: build
