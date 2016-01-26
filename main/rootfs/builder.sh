@@ -22,11 +22,8 @@ usage() {
   base="$(basename "$0")"
   cat <<EOUSAGE
 Usage: $base [args]
-  -d,--docker           : Build the final image
   -i,--import-path arg  : Go import path of the project
-  -l,--latest           : Tag the final image as latest
   -p,--platforms arg    : List of platforms (GOOS/GOARCH) to build separated by a space
-  -t,--tag arg          : Docker tag for the final image
   -T,--tests            : Go run tests
 EOUSAGE
 }
@@ -39,24 +36,12 @@ fi
 while [[ $# -gt 0 ]]; do
   opt="$1"
   case "${opt}" in
-    -d|--docker)
-      docker=1
-      shift
-      ;;
     -i|--import-path)
       repoName="$2"
       shift 2
       ;;
-    -l|--latest)
-      latest=1
-      shift
-      ;;
     -p|--plateforms)
       IFS=' ' read -r -a goarchs <<< "$2"
-      shift 2
-      ;;
-    -t|--tag)
-      tagName="$2"
       shift 2
       ;;
     -T|--tests)
@@ -115,36 +100,5 @@ do
     CGO_ENABLED=1 GOOS=${goos} GOARCH=${arch} make build
   fi
 done
-
-# Building the final docker image
-docker=${docker:-0}
-if [ ${docker} -eq 1 ]; then
-  [ ! -e "/run/docker.sock" ] && echo "Error: Docker socket must be mount into /run/docker.sock" && exit 1
-  [ ! -e "./Dockerfile" ] && echo "Error: A Dockerfile must be present into the root of your source files" && exit 1
-
-  # Get the last part of the repository name
-  defaultName=${repoName##*/}
-  # Branch name as default tag
-  defaultTag=$( git rev-parse --abbrev-ref HEAD 2> /dev/null || echo 'unknown' )
-  tagName=${tagName:-${defaultName}:${defaultTag}}
-  latest=${latest:-0}
-
-  # Some additionnal files necessary to fix `From scratch` issues
-  cp -a /etc/ssl/certs/ca-certificates.crt ./
-  tar cfz zoneinfo.tar.gz -C / usr/share/zoneinfo
-  mkdir ./emptydir
-
-  echo ">> building final docker image"
-  echo " >   ${tagName}"
-  docker build -t "${tagName}" .
-
-  if [ ${latest} -eq 1 ]; then
-    echo ">> tagging final docker image as latest"
-    docker tag -f "${tagName}" "${tagName%%:*}:latest"
-  fi
-
-  # Cleaning fixing files
-  rm -rf ./ca-certificates.crt zoneinfo.tar.gz emptydir/
-fi
 
 exit 0
