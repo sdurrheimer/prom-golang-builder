@@ -5,8 +5,8 @@ VOLUME  /app
 WORKDIR /app
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN set -x \
-    && dpkg --add-architecture powerpc \
+RUN \
+    dpkg --add-architecture powerpc \
     && dpkg --add-architecture ppc64el \
     && echo "deb http://emdebian.org/tools/debian/ jessie main" > /etc/apt/sources.list.d/crosstools.list \
     && curl http://emdebian.org/tools/debian/emdebian-toolchain-archive.key | apt-key add - \

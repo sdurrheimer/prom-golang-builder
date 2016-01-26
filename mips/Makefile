@@ -11,9 +11,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-NAME := prom-golang-builder
+REPOSITORY := sdurrheimer
+NAME       := prom-golang-builder
+BRANCH     := $(shell git rev-parse --abbrev-ref HEAD)
+SUFFIX     ?= -$(BRANCH)
+DIRNAME    := $(shell basename $(CURDIR))
 
 build:
-	docker build -t "sdurrheimer/$(NAME):mips-$(shell git rev-parse --abbrev-ref HEAD)" .
+	docker build -t "$(REPOSITORY)/$(NAME):$(DIRNAME)$(SUFFIX)" .
 
 .PHONY: build

@@ -5,8 +5,8 @@ VOLUME  /app
 WORKDIR /app
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN set -x \
-    && dpkg --add-architecture arm64 \
+RUN \
+    dpkg --add-architecture arm64 \
     && dpkg --add-architecture armel \
     && dpkg --add-architecture armhf \
     && echo "deb http://emdebian.org/tools/debian/ jessie main" > /etc/apt/sources.list.d/crosstools.list \

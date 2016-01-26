@@ -5,8 +5,8 @@ VOLUME  /app
 WORKDIR /app
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN set -x \
-    && dpkg --add-architecture mips \
+RUN \
+    dpkg --add-architecture mips \
     && dpkg --add-architecture mipsel \
     && echo "deb http://emdebian.org/tools/debian/ jessie main" > /etc/apt/sources.list.d/crosstools.list \
     && curl http://emdebian.org/tools/debian/emdebian-toolchain-archive.key | apt-key add - \

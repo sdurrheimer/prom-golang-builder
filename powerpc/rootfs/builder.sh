@@ -78,7 +78,7 @@ fi
 
 # Building binaries for the specified platforms
 # The `build` Makefile target is required
-goarchs=(${goarchs[@]:-linux\/amd64})
+goarchs=(${goarchs[@]:-linux\/ppc64})
 for goarch in "${goarchs[@]}"
 do
   goos=${goarch%%/*}
