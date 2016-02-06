@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2015 The Prometheus Authors
+# Copyright 2016 The Prometheus Authors
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -16,15 +16,15 @@
 set -e
 
 # This is a Makefile based building processus
-[ ! -e "./Makefile" ] && echo "Error: A Makefile with a 'build' target must be present into the root of your source files" && exit 1
+[ ! -e "./Makefile" ] && echo "Error: A Makefile with 'build' and 'test' targets must be present into the root of your source files" && exit 1
 
 usage() {
   base="$(basename "$0")"
   cat <<EOUSAGE
-Usage: $base [args]
+Usage: ${base} [args]
   -i,--import-path arg  : Go import path of the project
   -p,--platforms arg    : List of platforms (GOOS/GOARCH) to build separated by a space
-  -T,--tests            : Go run tests
+  -T,--tests            : Go run tests then exit
 EOUSAGE
 }
 
